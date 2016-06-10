@@ -1,0 +1,43 @@
+DISCHARGE SHEET
+
+Dim m_MissingFields As String
+Dim w As Double
+Private Sub cmd_cancel_Click()
+Unload Me
+End Sub
+Private Sub cmd_save_Click()
+Dim roomno As Integer
+If ValidateForm = True Then
+    db.Open
+    db.Execute ("INSERT INTO DISCHARGESHEET VALUES('" & txtPatID.Text & " ','" & txt_name.Text & "','" & txt_dr.Text & "', '" & txt_remarks.Text & "'," & txt_totbill.Text & ",'" & DTP.Value & "')")
+    rs.Open "SELECT RoomNo FROM PATIENTDETAILS WHERE patientid='" & Val(txtPatID.Text) & "'", db, adOpenDynamic, adLockOptimistic
+    If Not rs.EOF Then
+        roomno = rs!roomno
+    End If
+    rs.Close
+    db.Execute ("UPDATE ADDROOM SET Allocated='N' WHERE roomno=" & roomno)
+    MsgBox "Recorded added successfully"
+    db.Close
+Else
+    m_MissingFields = Left(m_MissingFields, Len(m_MissingFields) - 1)
+    MsgBox "Some fields(" & m_MissingFields & ")" & vbCrLf & " are missing, please fill the fields and try again", vbCritical + vbOKOnly, "Missing fields"
+            m_MissingFields = ""
+End If
+End Sub
+
+Private Sub Form_Load()
+connectdb
+End Sub
+Private Function ValidateForm() As Boolean
+    Dim m_valid As Boolean
+    m_valid = True
+    If txt_remarks.Text = "" Then
+        m_MissingFields = m_MissingFields & "Remarks ,"
+        m_valid = False
+    End If
+    If txt_totbill.Text = "" Then
+        m_MissingFields = m_MissingFields & "Bill Amount,"
+        m_valid = False
+    End If
+    ValidateForm = m_valid
+End Function

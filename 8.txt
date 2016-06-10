@@ -1,0 +1,125 @@
+OUTPATIENT BILL
+Dim m_count As Integer
+Dim total As Integer
+Dim m_MissingFields As String
+Private Sub Command1_Click()
+db.Open
+rs.Open "OPPHARMACY", db, adOpenDynamic, adLockOptimistic
+rs.AddNew
+rs!Name = txt_name.Text
+rs!Amount = txt_amt.Text
+rs!billno = txt_billno.Text
+rs!Date = DTP.Value
+rs!pamt = txt_pamt.Text
+rs!labamt = txt_lamt.Text
+rs!tot = txt_tot.Text
+rs!patientid = Combo_patid.Text
+rs!doctor = Combo_dr.Text
+rs.Update
+'MsgBox "You are registered", vbInformation, "UserAdded"
+rs.Close
+db.Close
+End Sub
+Private Sub cmd_save_Click()
+If ValidateForm = True Then
+db.Open
+db.Execute "INSERT INTO OPBILL VALUES(" & txt_billno.Text & "," & Combo_patid.Text & ",'" & txt_name.Text & _
+                                        "','" & Combo_dr.Text & "','" & DTP.Value & "'," & txt_amt.Text & _
+                                        "," & txt_pamt.Text & "," & txt_lamt.Text & "," & txt_tot.Text & " )"
+MsgBox "Record added successfully"
+db.Close
+Else
+ m_MissingFields = Left(m_MissingFields, Len(m_MissingFields) - 1)
+        MsgBox "Some fields(" & m_MissingFields & ")" & vbCrLf & " are missing, please fill the fields and try again", vbCritical + vbOKOnly, "Missing fields"
+        m_MissingFields = ""
+End If
+End Sub
+Private Sub Combo_patid_Click()
+db.Open
+rs.Open "SELECT * FROM PATIENTDETAILS WHERE patientid='" + Combo_patid.Text + "'", db, adOpenDynamic, adLockOptimistic
+If Not rs.EOF() Then
+    txt_name.Text = rs!Name
+Else
+    MsgBox "Record not found"
+End If
+rs.Close
+rs.Open "SELECT * FROM PHARBILL WHERE patientid=" + Combo_patid.Text + " ", db, adOpenDynamic, adLockOptimistic
+If Not rs.EOF() Then
+txt_pamt.Text = rs!tot
+rs.Close
+Else
+MsgBox "Not Found"
+End If
+rs.Close
+rs.Open "SELECT * FROM LABBILL WHERE patientid=" + Combo_patid.Text + " ", db, adOpenDynamic, adLockOptimistic
+If Not rs.EOF() Then
+txt_lamt.Text = rs!total
+rs.Close
+Else
+    MsgBox "Amount field is empty"
+End If
+db.Close
+End Sub
+Private Sub Command2_Click()
+Unload Me
+End Sub
+Private Sub Form_Load()
+connectdb
+db.Open
+rs.Open "DrREGISTRATION", db, adOpenDynamic, adLockOptimistic
+While Not rs.EOF
+Combo_dr.AddItem rs!drname
+rs.MoveNext
+Wend
+db.Close
+db.Open
+rs.Open "PATIENTDETAILS", db, adOpenDynamic, adLockOptimistic
+While Not rs.EOF
+Combo_patid.AddItem rs!patientid
+rs.MoveNext
+Wend
+db.Close
+db.Open
+rs.Open "SELECT COUNT(*) FROM OPBILL", db, adOpenDynamic, adLockOptimistic
+m_count = rs(0)
+If (m_count = 0) Then
+    m_count = 1
+    txt_billno.Text = m_count
+Else
+    m_count = m_count + 1
+    txt_billno.Text = m_count
+End If
+db.Close
+End Sub
+Private Sub txt_amt_KeyPress(KeyAscii As Integer)
+    If KeyAscii = 13 Then
+        total = Val(txt_amt.Text) + Val(txt_lamt.Text) + Val(txt_pamt.Text)
+           txt_tot.Text = total
+        cmd_save.SetFocus
+    End If
+End Sub
+Private Function ValidateForm() As Boolean
+    Dim m_valid As Boolean
+    m_valid = True
+    If txt_name.Text = "" Then
+        m_MissingFields = m_MissingFields & "Name,"
+        m_valid = False
+    End If
+    If txt_amt.Text = "" Then
+        m_MissingFields = m_MissingFields & "Amount,"
+        m_valid = False
+    End If
+    If txt_lamt.Text = "" Then
+        m_MissingFields = m_MissingFields & "Lab Amount,"
+        m_valid = False
+    End If
+    If txt_pamt.Text = "" Then
+        m_MissingFields = m_MissingFields & "Pharmacy Amount,"
+        m_valid = False
+    End If
+    If txt_tot.Text = "" Then
+        m_MissingFields = m_MissingFields & "Total,"
+        m_valid = False
+    End If
+    ValidateForm = m_valid
+End Function

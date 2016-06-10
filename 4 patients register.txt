@@ -1,0 +1,213 @@
+PATIENT REGISTRATION
+
+Dim m_sx As String
+Dim m_patid As Integer
+Dim m_patcount As Integer
+Dim m_totpat As Integer
+Dim m_MissingFields As String
+
+Private Sub cmd_del_Click()
+'MsgBox ("DELETE FROM PATIENTDETAILS WHERE timestampdiff(SQL_TSI_MONTH," & Date & ",ts admindate))")
+End Sub
+Private Sub Combo_drpref_Click()
+db.Open
+rs.Open "SELECT totpat FROM DrREGISTRATION WHERE drname='" & Combo_drpref.Text & "' ", db, adOpenDynamic, adLockOptimistic
+  If Not rs.EOF() Then
+        m_totpat = rs!totpat
+    Else
+        MsgBox "Not found"
+    End If
+rs.Close
+rs.Open "SELECT * FROM DrREGISTRATION WHERE drname='" & Combo_drpref.Text & "' ", db, adOpenDynamic, adLockOptimistic
+If Not rs.EOF() Then
+    txt_regfee.Text = rs!consultfee
+Else
+    MsgBox "Record not found"
+End If
+rs.Close
+rs.Open "SELECT * FROM PATCOUNT WHERE drname='" & Combo_drpref.Text & "'", db, adOpenDynamic, adLockOptimistic
+    If Not rs.EOF() Then
+    m_patcount = rs!patcount
+    If (m_patcount > m_totpat) Then
+        MsgBox "Patient Count Exceeds please assign to another Doctor"
+    End If
+    Else
+    MsgBox "Record not Found"
+    End If
+    rs.Close
+db.Close
+End Sub
+Private Sub Combo_patid_Click()
+db.Open
+rs.Open "SELECT * FROM PATIENTDETAILS WHERE patientid='" & Combo_patid.Text & "'", db, adOpenDynamic, adLockOptimistic
+lst_names.AddItem rs!Name
+lst_age.AddItem rs!age
+lst_add.AddItem rs!address
+db.Close
+Command3.Enabled = False
+End Sub
+Private Sub Command1_Click ()
+Dim pattype As String
+Dim rno As Integer
+If Opt_male = True Then
+m_sx = "male"
+Else
+m_sx = "female"
+End If
+db.Open
+rs.Open "SELECT * FROM PATIENTDETAILS where patientid='" & txt_patientid.Text & "' ", db, adOpenDynamic, adLockOptimistic
+If Not rs.EOF() Then
+    MsgBox "Patient ID allready exist"
+Else
+    If ValidateForm = True Then
+    If rdoIP.Value = True Then
+        pattype = rdoIP.Caption
+        rno = Val(cmbRoomNo.Text)
+    Else
+        pattype = rdoOP.Caption
+        rno = -1
+    End If
+    db.Execute ("INSERT INTO PATIENTDETAILS VALUES ('" & txt_name.Text & "'," & _
+    txt_age.Text & ",'" & m_sx & "','" & txt_address.Text & "','" & _
+    Combo_drpref.Text & "','" & txt_patientid & "'," & txt_regfee & ",' “& _
+    DTP.Value & "','" & pattype & "'," & rno & ")")
+    db.Execute ("UPDATE ADDROOM SET Allocated='Y' WHERE roomno=" & Val (cmbRoomNo.Text))
+    MsgBox "Record added successfully"
+    m_patid = m_patid + 1
+     Else
+ m_MissingFields = Left (m_MissingFields, Len (m_MissingFields) - 1)
+        MsgBox "Some fields (" & m_MissingFields & ")" & vbCrLf & " are missing, please fill the fields and try again", vbCritical + vbOKOnly, "Missing fields"
+        m_MissingFields = ""
+    End If
+End If
+db.Close
+'m_patid = m_patid + 1
+txt_address.Text = ""
+txt_age.Text = ""
+txt_name.Text = ""
+txt_regfee.Text = ""
+txt_patientid.Text = m_patid
+db.Open
+m_patcount = m_patcount + 1
+rs.Open "SELECT * FROM PATCOUNT WHERE drname='" & Combo_drpref.Text & "'", db, adOpenDynamic, adLockOptimistic
+WHERE drname=' " & Combo_drpref.Text & "' ")
+If Not rs.EOF () Then
+rs!patcount = m_patcount
+rs.Update
+Else
+MsgBox "Please fill all the fields"
+End If
+db.Close
+End Sub
+Private Sub DTPicker1_Change ()
+End Sub
+Private Sub Command2_Click ()
+Unload Me
+End Sub
+Private Sub Command3_Click ()
+If (txt_dt.Text = "") Then
+    MsgBox "Please enter the date", vbCritical, "Warning"
+Else
+db.Open
+rs.Open "SELECT * FROM PATIENTDETAILS WHERE admindate= #" & txt_dt.Text & "# ", db, adOpenDynamic, adLockOptimistic
+While Not rs.EOF()
+    lst_names.AddItem rs!Name
+    lst_age.AddItem rs!age
+    lst_add.AddItem rs!address
+    rs.MoveNext
+Wend
+db.Close
+End If
+End Sub
+Private Sub Command4_Click ()
+Unload Me
+End Sub
+Private Sub Command5_Click ()
+Combo_patid.Text = ""
+txt_dt.Text = ""
+lst_age.Clear
+lst_names.Clear
+lst_add.Clear
+End Sub
+Private Sub Command6_Click()
+End Sub
+Private Sub Form_Load ()
+connectdb
+db.Open
+rs.Open "SELECT * FROM DrREGISTRATION", db, adOpenDynamic, adLockOptimistic
+While not rs.EOF ()
+    Combo_drpref.AddItem rs!drname
+    rs.MoveNext
+Wend
+rs.Close
+rs.Open "SELECT COUNT (*) FROM PATIENTDETAILS", db, adOpenDynamic, adLockOptimistic
+If (rs(0) = 0) Then
+    m_patid = 1
+    txt_patientid.Text = m_patid
+Else
+    m_patid = rs(0) + 1
+    txt_patientid.Text = rs (0) + 1
+End If
+db.Close
+rdoOP.Value = True
+loadRooms
+cmbRoomNo.Enabled = False
+
+End Sub
+
+Private Sub rdoIP_Click ()
+    If rdoIP.Value = True Then
+        cmbRoomNo.Enabled = True
+    End If
+End Sub
+Private Sub rdoOP_Click ()
+    If rdoOP.Value = True Then
+        cmbRoomNo.Enabled = False
+    End If
+End Sub
+Private Sub SSTab1_Click (PreviousTab as Integer)
+db.Open
+rs.Open "PATIENTDETAILS", db, adOpenDynamic, adLockOptimistic
+While not rs.EOF
+Combo_patid.AddItem rs!patientid
+rs.MoveNext
+Wend
+db.Close
+End Sub
+Private Sub txt_dt_GotFocus ()
+Command3.Enabled = True
+End Sub
+Private Function ValidateForm () As Boolean
+    Dim m_valid As Boolean
+    m_valid = True
+    If txt_name.Text = "" Then
+        m_MissingFields = m_MissingFields & "Name,"
+        m_valid = False
+    End If
+    If txt_age.Text = "" Then
+        m_MissingFields = m_MissingFields & "Age,"
+        m_valid = False
+    End If
+    If txt_address.Text = "" Then
+        m_MissingFields = m_MissingFields & "Address,"
+        m_valid = False
+    End If
+    If txt_regfee.Text = "" Then
+        m_MissingFields = m_MissingFields & "Registration Fee,"
+        m_valid = False
+    End If
+    ValidateForm = m_valid
+End Function
+Public Sub loadRooms()
+    db.Open
+    rs.Open "SELECT roomno FROM ADDROOM WHERE Allocated='N'", db, adOpenDynamic, adLockOptimistic
+    cmbRoomNo.Clear
+    While Not rs.EOF
+        cmbRoomNo.AddItem rs.Fields(0)
+        rs.MoveNext
+    Wend
+    If (cmbRoomNo.ListCount > 0) Then
+    cmbRoomNo.ListIndex = 0
+    End If
+    db.Close
+End Sub

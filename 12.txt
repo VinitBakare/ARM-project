@@ -1,0 +1,35 @@
+INPATIENT SEARCH 
+
+Private Sub cmd_close_Click()
+Unload Me
+End Sub
+
+Private Sub Combo_patid_Click()
+db.Open
+rs.Open "SELECT * FROM PATIENTDETAILS WHERE patientid= '" + Combo_patid.Text + "'", db, adOpenDynamic, adLockOptimistic
+If Not rs.EOF() Then
+    txt_name.Text = rs!Name
+    txt_address.Text = rs!address
+    Else
+    MsgBox "Record not found"
+End If
+rs.Close
+'rs.Open "SELECT * FROM ROOMALLOCATION WHERE patientid= '" & Combo_patid.Text & "' "
+rs.Open "SELECT * FROM PATIENTDETAILS WHERE patientid= '" & Combo_patid.Text & "' and type='IP'"
+    If Not rs.EOF() Then
+        txt_roomno.Text = rs!roomno
+    Else
+        MsgBox "Record not found"
+    End If
+db.Close
+End Sub
+Private Sub Form_Load()
+connectdb
+db.Open
+rs.Open "SELECT * FROM PATIENTDETAILS WHERE type='IP'", db, adOpenDynamic, adLockOptimistic
+While Not rs.EOF()
+Combo_patid.AddItem rs!patientid
+rs.MoveNext
+Wend
+db.Close
+End Sub

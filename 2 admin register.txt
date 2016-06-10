@@ -1,0 +1,16 @@
+ADMINISTRATOR REGISTRATION
+
+
+Private Sub cmd_cancel_Click()
+Unload Me
+End Sub
+Private Sub cmd_save_Click()
+db.Open
+db.Execute ("INSERT INTO LOGIN VALUES ('" & txt_username.Text & "','" & txt_password.Text & "')")
+MsgBox "Record added successfully"
+db.Close
+End Sub
+Private Sub Form_Load ()
+connectdb
+End Sub
+

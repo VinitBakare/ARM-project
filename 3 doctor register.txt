@@ -1,0 +1,91 @@
+DOCTOR’S REGISTRATION
+
+Dim m_time As String
+Dim m_MissingFields As String
+Private Sub Command1_Click ()
+If ValidateForm = True Then
+    db.Open
+    m_time = txt_timefrom.Text & “to” & txt_timeto.Text
+    rs.Open "DrREGISTRATION", db, adOpenDynamic, adLockOptimistic
+    rs.AddNew
+    rs!drname = txt_name.Text
+    If Opt_male.Value = True Then
+        rs!sex = "Male"
+    Else
+        rs!sex = "Female"
+    End If
+    rs!dept = cmb_dept.Text
+    rs!consultationtime = m_time
+    rs!address = txt_address.Text
+    rs!contactno = txt_contactno.Text
+    rs!emergencyno = txt_emergency.Text
+    rs!Date = DTP.Value
+    rs!consultationday = comb_day.Text
+    rs!totpat = txt_totpat.Text
+    rs!consultfee = txt_fee.Text
+    rs.Update
+    MsgBox "One Doctor Registered", vbInformation, "Doctor ADDED"
+    rs.Close
+    rs.Open "PATCOUNT", db, adOpenDynamic, adLockOptimistic
+    rs.AddNew
+        rs!drname = txt_name.Text
+        rs!patcount = txt_totpat.Text
+        rs!Date = DTP.Value
+    rs.Update
+    db.Close
+Else
+    m_MissingFields = Left (m_MissingFields, Len (m_MissingFields) - 1)
+    MsgBox "Some fields (" & m_MissingFields & ")" & vbCrLf & " are missing, please fill the fields and try again", vbCritical + vbOKOnly, "Missing fields"
+            m_MissingFields = ""
+End If
+End Sub
+Private Sub Command2_Click ()
+Unload Me
+End Sub
+Private Sub Form_Load()
+connectdb
+comb_day.AddItem "Monday"
+comb_day.AddItem "Tuesday"
+comb_day.AddItem "Wednesday"
+comb_day.AddItem "Thursday"
+comb_day.AddItem "Friday"
+comb_day.AddItem "Saturday"
+comb_day.AddItem "Sunday"
+End Sub
+Private Function ValidateForm() As Boolean
+    Dim m_valid As Boolean
+    m_valid = True
+    If txt_name.Text = "" Then
+        m_MissingFields = m_MissingFields & "Name,"
+        m_valid = False
+    End If
+    If cmb_dept.Text = "" Then
+        m_MissingFields = m_MissingFields & "Dept Name,"
+        m_valid = False
+    End If
+    If txt_timefrom.Text = "" Then
+        m_MissingFields = m_MissingFields & "Time From,"
+        m_valid = False
+    End If
+    If txt_timeto.Text = "" Then
+        m_MissingFields = m_MissingFields & "Time To,"
+        m_valid = False
+    End If
+    If txt_address.Text = "" Then
+        m_MissingFields = m_MissingFields & "Address,"
+        m_valid = False
+    End If
+    If txt_contactno.Text = "" Then
+        m_MissingFields = m_MissingFields & "Contact no,"
+        m_valid = False
+    End If
+    If txt_emergency.Text = "" Then
+        m_MissingFields = m_MissingFields & "Emergency no,"
+        m_valid = False
+    End If
+    If txt_fee.Text = "" Then
+        m_MissingFields = m_MissingFields & "Fees,"
+        m_valid = False
+    End If
+    ValidateForm = m_valid
+End Function

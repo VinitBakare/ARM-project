@@ -1,0 +1,144 @@
+INPATIENT BILL
+
+Dim billno As Integer
+Dim w As Integer
+Dim addt As Date
+Dim diff As Integer
+Private Sub cm_close_Click()
+'End If
+Unload Me
+End Sub
+Private Sub cmd_dis_Click()
+w = 0
+db.Open
+'rs.Open "select * from PATIENTDETAILS where patientid='" + txtPatID.Text + "' ", db, adOpenDynamic, adLockOptimistic
+rs.Open "select * from LABBILL where patientid=" + Combo_patid.Text + " ", db, adOpenDynamic, adLockOptimistic
+If Not rs.EOF() Then
+w = w + rs("total")
+Else
+'MsgBox "Record not found"
+w = w
+End If
+rs.Close
+rs.Open "select * from PHARBILL where patientid=" + Combo_patid.Text + " ", db, adOpenDynamic, adLockOptimistic
+If Not rs.EOF() Then
+w = w + rs("tot")
+Else
+'MsgBox "Record not found"
+w = w
+End If
+rs.Close
+rs.Open "select * from IPBILL where patientid=" + Combo_patid.Text + " ", db, adOpenDynamic, adLockOptimistic
+If Not rs.EOF() Then
+w = w + rs("tot")
+Else
+'MsgBox "Record not found"
+w = w
+End If
+rs.Close
+db.Close
+'txt_totbill.Text = w
+Load DISCHARGEsheet
+DISCHARGEsheet.txt_totbill.Text = w
+DISCHARGEsheet.txtPatID.Text = Combo_patid.Text
+DISCHARGEsheet.txt_dr.Text = Combo_dr.Text
+DISCHARGEsheet.txt_name.Text = txt_name.Text
+DISCHARGEsheet.Show
+End Sub
+
+Private Sub cmd_save_Click()
+If ValidateForm = True Then
+db.Open
+rs.Open "IPBILL", db, adOpenDynamic, adLockOptimistic
+rs.AddNew
+rs!Name = txt_name.Text
+rs!regdate = txt_regdate.Text
+rs!patientid = Combo_patid.Text
+rs!doctor = Combo_dr.Text
+rs!regdate = txt_regdate.Text
+rs!billno = txt_billno.Text
+rs!room = txt_room.Text
+rs!amt = txt_amt.Text
+rs!tot = diff
+rs.Update
+rs.Close
+MsgBox "Recorded added sucessfully"
+Else
+        m_MissingFields = Left(m_MissingFields, Len(m_MissingFields) - 1)
+        MsgBox "Some fields(" & m_MissingFields & ")" & vbCrLf & " are missing, please fill the fields and try again", vbCritical + vbOKOnly, "Missing fields"
+        m_MissingFields = ""
+End If
+db.Close
+cmd_dis.Enabled = True
+cmd_save.Enabled = False
+End Sub
+
+Private Sub Combo_patid_Click()
+db.Open
+rs.Open "SELECT * FROM PATIENTDETAILS WHERE patientid='" + Combo_patid.Text + "'", db, adOpenDynamic, adLockOptimistic
+If Not rs.EOF() Then
+    txt_regdate.Text = rs!admindate
+    txt_name.Text = rs!Name
+    txt_regdate.Text = rs!admindate
+    addt = rs!admindate
+    Combo_dr.Text = rs!doctor
+Combo_patid.Text + "'", db, adOpenDynamic, adLockOptimistic
+    txt_room.Text = rs!roomno
+    'txt_amt.Text = rs!amt
+    rs.Close
+    rs.Open "SELECT amt from ADDROOM WHERE roomno=" & Val(txt_room.Text)
+    If Not rs.EOF Then
+        txt_amt.Text = rs!amt
+    End If
+Else
+    MsgBox "No Rooms allotted"
+End If
+'rs.Open "SELECT * FROM PATIENTDETAILS", db, adOpenDynamic, adLockOptimistic
+db.Close
+diff = DateDiff("d", addt, Now)
+diff = diff * Val(txt_amt.Text)
+'MsgBox diff
+txt_tot.Text = diff
+End Sub
+Private Sub Form_Load()
+connectdb
+db.Open
+rs.Open "SELECT  patientid FROM PATIENTDETAILS WHERE Type='IP'", db, adOpenDynamic, adLockOptimistic
+While Not rs.EOF
+Combo_patid.AddItem rs!patientid
+rs.MoveNext
+Wend
+db.Close
+db.Open
+rs.Open "DrREGISTRATION", db, adOpenDynamic, adLockOptimistic
+While Not rs.EOF
+Combo_dr.AddItem rs!drname
+rs.MoveNext
+Wend
+db.Close
+'db.Open
+db.Open
+rs.Open "SELECT COUNT(*) FROM IPBILL", db, adOpenDynamic, adLockOptimistic
+If (rs(0) = 0) Then
+    txt_billno.Text = 1
+Else
+billno = billno + 1
+txt_billno.Text = billno
+End If
+db.Close
+End Sub
+Private Sub Label11_Click()
+End Sub
+Private Function ValidateForm() As Boolean
+Dim m_valid As Boolean
+m_valid = True
+If txt_name.Text = "" Then
+m_MissingFields = m_MissingFields & "Name,"
+m_valid = False
+End If
+If txt_amt.Text = "" Then
+m_MissingFields = m_MissingFields & "Amount,"
+m_valid = False
+End If
+ValidateForm = m_valid
+End Function

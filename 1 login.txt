@@ -1,0 +1,58 @@
+Private Sub Command2_Click ()
+Unload Me
+End Sub
+Private Sub Command3_Click ()
+    Db. Open
+    Set rs = db. Execute ("SELECT * FROM LOGIN where username='" & txt_username.Text & "'")
+    If (txt_ password = "" And txt_ username = "") Then
+        MsgBox "Login not possible"
+    Else
+    If No t rs. EOF () Then
+        If (rs(1) = txt_ password. Text) Then
+            MsgBox "Login Successful"
+            frmMDI.mn RegAdmin.Enabled = True
+            frmMDI.mnuRegDr.Enabled = True
+            frmMDI.mnuAddDept.Enabled = True
+            frmMDI.mnuRegUser.Enabled = True
+            frmMDI.mnuAddrooms.Enabled = True
+            frmMDI.mnuEditdr.Enabled = True
+            frmMDI.mnulogoff.Enabled = True
+            frmMDI.mnuLogin.Enabled = False
+            frmMDI.mnuPatient.Enabled = True
+            frmMDI.mnuSearch.Enabled = True
+            frmMDI.mnuBilling.Enabled = True
+            frmMDI.mnuuser.Enabled = True
+            Unload Me
+        Else
+            MsgBox "Login not success"
+        End If
+    Else
+        MsgBox "EOF Reached"
+    End If
+End If
+    db.Close
+End Sub
+Private Sub Command4_Click()
+    db.Open
+    Set rs = db.Execute("SELECT * FROM STAFFLOGIN where username='" & txt_username.Text & "'")
+    If Not rs.EOF() Then
+        If (rs(1) = txt_password.Text) Then
+            MsgBox "Login Successful"
+            frmMDI.mnulogoff.Enabled = True
+            frmMDI.mnuLogin.Enabled = False
+            frmMDI.mnuPatient.Enabled = True
+            frmMDI.mnuSearch.Enabled = True
+            frmMDI.mnuBilling.Enabled = True
+            frmMDI.mnuuser.Enabled = True
+            Unload Me
+        Else
+            MsgBox "Login not success"
+        End If
+    Else
+        MsgBox "Invalid Username or Password"
+    End If
+    db.Close
+End Sub
+Private Sub Form_Load()
+connectdb
+End Sub

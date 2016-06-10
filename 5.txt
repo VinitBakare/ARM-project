@@ -1,0 +1,40 @@
+EDIT DOCTOR
+
+Private Sub cmd_update_Click()
+db.Open
+rs.Open "SELECT * FROM DrREGISTRATION WHERE Drname= '" + Combo_drname.Text + "'", db, 3, 3
+If Not rs.EOF() Then
+rs!consultationtime = txt_time.Text
+rs!address = txt_address.Text
+rs!contactno = txt_contactno.Text
+rs!emergencyno = txt_emergencyno.Text
+rs.Update
+MsgBox "Record updated Successfully"
+db.Close
+Else
+MsgBox "Record not found"
+End If
+End Sub
+
+Private Sub Combo_drname_Click()
+db.Open
+rs.Open "SELECT * FROM DrREGISTRATION where drname='" + Combo_drname.Text + "' ", db, adOpenDynamic, adLockOptimistic
+txt_time.Text = rs!consultationtime
+txt_address.Text = rs!address
+txt_contactno.Text = rs!contactno
+txt_emergencyno.Text = rs!emergencyno
+db.Close
+End Sub
+Private Sub Command2_Click()
+Unload Me
+End Sub
+Private Sub Form_Load()
+connectdb
+db.Open
+rs.Open "DrREGISTRATION", db, adOpenDynamic, adLockOptimistic
+While Not rs.EOF
+Combo_drname.AddItem rs!drname
+rs.MoveNext
+Wend
+db.Close
+End Sub

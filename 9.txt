@@ -1,0 +1,91 @@
+PHARMACY BILL
+
+Dim i As Integer
+Dim j As Integer
+Dim amt As Double
+Dim billno As Integer
+Dim m_MissingFields As String
+Private Sub cmd_save_Click()
+If ValidateForm = True Then
+For k = 1 To MSF.Rows - 2
+db.Execute ("INSERT INTO PHARBILL VALUES( " & txt_billno.Text & ",'" & DTP.Value & _
+"','" & Combo_patid.Text & "','" & MSF.TextMatrix(k, 1) & "','" & MSF.TextMatrix(k, 2) & _
+"'," & MSF.TextMatrix(k, 3) & "," & lblTotal.Caption & ")")
+Next
+MsgBox "Recorded added successfully"
+Else
+ m_MissingFields = Left(m_MissingFields, Len(m_MissingFields) - 1)
+        MsgBox "Some fields(" & m_MissingFields & ")" & vbCrLf & " are missing, please fill the fields and try again", vbCritical + vbOKOnly, "Missing fields"
+        m_MissingFields = ""
+End If
+db.Close
+End Sub
+
+Private Sub Combo_med_Click()
+rs.Open "SELECT * FROM MEDICINE WHERE medname='" + Combo_med.Text + "'", db, adOpenDynamic, adLockOptimistic
+
+If Not rs.EOF() Then
+    lblprice.Caption = rs!amt
+End If
+rs.Close
+txt_qty.SetFocus
+End Sub
+
+Private Sub Command3_Click()
+Unload Me
+db.Close
+End Sub
+
+Private Sub Form_Load()
+    i = 1
+    connectdb
+    db.Open
+    rs.Open "SELECT * FROM MEDICINE", db, adOpenDynamic, adLockOptimistic
+    Combo_med.AddItem ""
+    While Not rs.EOF()
+        Combo_med.AddItem rs!medname
+        rs.MoveNext
+    Wend
+    rs.Close
+    rs.Open "SELECT COUNT(*) FROM PHARBILL", db, adOpenDynamic, adLockOptimistic
+    billno = rs(0)
+    If (billno = 0) Then
+        txt_billno.Text = 1
+    Else
+        billno = billno + 1
+        txt_billno.Text = billno
+    End If
+    rs.Close
+    rs.Open "SELECT * FROM PATIENTDETAILS", db, adOpenDynamic, adLockOptimistic
+    While Not rs.EOF()
+    Combo_patid.AddItem rs!patientid
+    rs.MoveNext
+    Wend
+    rs.Close
+End Sub
+
+Private Sub txt_qty_KeyPress(KeyAscii As Integer)
+    If KeyAscii = 13 Then
+        MSF.TextMatrix(i, 0) = i
+        MSF.TextMatrix(i, 1) = Combo_med.Text
+        MSF.TextMatrix(i, 2) = txt_qty.Text
+        MSF.TextMatrix(i, 3) = CDbl(Val(txt_qty.Text) * Val(lblprice.Caption))
+        lblTotal.Caption = Val(lblTotal.Caption) + MSF.TextMatrix(i, 3)
+        MSF.Rows = MSF.Rows + 1
+        i = i + 1
+        txt_qty.Text = ""
+        lblprice.Caption = ""
+        Combo_med.ListIndex = 0
+    End If
+    
+End Sub
+Private Function ValidateForm() As Boolean
+    Dim m_valid As Boolean
+    m_valid = True
+    If txt_qty.Text = "" Then
+        m_MissingFields = m_MissingFields & "Qty,"
+        m_valid = False
+    End If
+
+    ValidateForm = m_valid
+End Function

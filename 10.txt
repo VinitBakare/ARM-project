@@ -1,0 +1,103 @@
+LAB BILL
+
+Dim billno As Integer
+Dim i As Integer
+Dim k As Integer
+Dim m_MissingFields As String
+Private Sub combo_labtests_Click()
+If (combo_labtests.ListIndex = 0) Then
+Command4.Enabled = False
+Else
+Command4.Enabled = True
+End If
+rs.Open "SELECT * FROM LABUPDATE WHERE testname='" & combo_labtests.Text & "'", db, adOpenDynamic, adLockOptimistic
+If Not rs.EOF() Then
+lblamt.Caption = rs!amt
+End If
+rs.Close
+End Sub
+Private Sub Command2_Click()
+If ValidateForm = True Then
+For k = 1 To MSF.Rows - 2
+db.Execute ("INSERT INTO LABBILL VALUES( " & txt_billno.Text & ",'" & Combo_patid.Text & _
+            "','" & MSF.TextMatrix(k, 1) & "'," & MSF.TextMatrix(k, 2) & _
+            "," & lbl_tot.Caption & ")")
+Next
+MsgBox "Recorded added successfully"
+Else
+    m_MissingFields = Left(m_MissingFields, Len(m_MissingFields) - 1)
+        MsgBox "Some fields(" & m_MissingFields & ")" & vbCrLf & " are missing, please fill the fields and try again", vbCritical + vbOKOnly, "Missing fields"
+        m_MissingFields = ""
+End If
+For k = 1 To MSF.Rows - 2
+    MSF.TextMatrix(k, 0) = ""
+    MSF.TextMatrix(k, 1) = ""
+    MSF.TextMatrix(k, 2) = ""
+Next
+MSF.Rows = 2
+i = 1
+txt_billno.Text = billno + 1
+db.Close
+End Sub
+
+Private Sub Command3_Click()
+billno = billno - 1
+db.Close
+Unload Me
+End Sub
+
+Private Sub Command4_Click()
+MSF.TextMatrix(i, 0) = i
+MSF.TextMatrix(i, 1) = combo_labtests.Text
+MSF.TextMatrix(i, 2) = lblamt.Caption
+lbl_tot.Caption = Val(lbl_tot.Caption) + MSF.TextMatrix(i, 2)
+MSF.Rows = MSF.Rows + 1
+i = i + 1
+combo_labtests.ListIndex = 0
+lblamt.Caption = ""
+End Sub
+
+Private Sub Form_Load()
+
+If (combo_labtests.Text = "") Then
+Command4.Enabled = False
+Else
+Command4.Enabled = True
+End If
+i = 1
+connectdb
+db.Open
+combo_labtests.AddItem ""
+rs.Open "SELECT * FROM LABUPDATE", db, adOpenDynamic, adLockOptimistic
+While Not rs.EOF()
+    combo_labtests.AddItem rs!testname
+    rs.MoveNext
+Wend
+rs.Close
+rs.Open "SELECT * FROM PATIENTDETAILS", db, adOpenDynamic, adLockOptimistic
+While Not rs.EOF()
+    Combo_patid.AddItem rs!patientid
+    rs.MoveNext
+Wend
+rs.Close
+lbl_tot.Caption = 0
+rs.Open "SELECT COUNT(*) FROM LABBILL", db, adOpenDynamic, adLockOptimistic
+billno = rs(0)
+If (billno = 0) Then
+    txt_billno.Text = 1
+Else
+    billno = billno
+    txt_billno.Text = billno
+End If
+rs.Close
+End Sub
+
+Private Function ValidateForm() As Boolean
+    Dim m_valid As Boolean
+    m_valid = True
+    If MSF.TextMatrix(2, 1) = "" Then
+        m_MissingFields = m_MissingFields & "Test Name,"
+        m_valid = False
+    End If
+        ValidateForm = m_valid
+End Function

@@ -1,0 +1,41 @@
+ROOM ALLOCATION
+Dim m_MissingFields As String
+Private Sub Command1_Click()
+'On Error GoTo er
+If ValidateForm = True Then
+db.Open
+db.Execute "INSERT INTO ROOMALLOCATION VALUES('" & txt_patid.Text & "'," & txt_roomno.Text & ",'" & combo_rtype.Text & "'," & txt_amt.Text & ")"
+MsgBox "Record added successfully"
+db.Close
+Else
+        m_MissingFields = Left(m_MissingFields, Len(m_MissingFields) - 1)
+        MsgBox "Some fields(" & m_MissingFields & ")" & vbCrLf & " are missing, please fill the fields and try again", vbCritical + vbOKOnly, "Missing fields"
+        m_MissingFields = ""
+End If
+End Sub
+Private Sub Command2_Click()
+Unload Me
+End Sub
+Private Sub Form_Load()
+connectdb
+combo_rtype.Text = "Single room"
+combo_rtype.AddItem "Single room"
+combo_rtype.AddItem "Double room"
+End Sub
+Private Function ValidateForm() As Boolean
+    Dim m_valid As Boolean
+    m_valid = True
+    If txt_patid.Text = "" Then
+        m_MissingFields = m_MissingFields & "Patient ID,"
+        m_valid = False
+    End If
+    If txt_roomno.Text = "" Then
+        m_MissingFields = m_MissingFields & "Room No,"
+        m_valid = False
+    End If
+    If txt_amt.Text = "" Then
+        m_MissingFields = m_MissingFields & "Amount,"
+        m_valid = False
+    End If
+    ValidateForm = m_valid
+End Function
